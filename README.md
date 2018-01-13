@@ -8,6 +8,8 @@ Rotate the screen with the mouse.
 
 Hit END to close the window.
 
+This is a Go port of the original C source: https://github.com/yellingintothefan/gel
+
 ![screenshot](scrots/2018-01-12-220250_800x600_scrot.png)
 ![screenshot](scrots/2018-01-12-223519_800x600_scrot.png)
 ![screenshot](scrots/2018-01-12-170546_800x600_scrot.png)
