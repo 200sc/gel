@@ -85,39 +85,39 @@ func VMaxLen(vsv []Vertex) (max float64) {
 }
 
 func (o Obj) Tvgen() []Triangle {
-	scale := 1.0 / VMaxLen(obj.vsv)
-	tv := make([]Triangle, obj.fs.count)
-	for i := 0; i < obj.fs.count; i++ {
+	scale := 1.0 / VMaxLen(o.vsv)
+	tv := make([]Triangle, len(o.fs))
+	for i := 0; i < len(o.fs); i++ {
 		tv[i] = Triangle{
-			obj.vsv.vertex[obj.fs.face[i].va],
-			obj.vsv.vertex[obj.fs.face[i].vb],
-			obj.vsv.vertex[obj.fs.face[i].vc],
+			o.vsv[o.fs[i].va],
+			o.vsv[o.fs[i].vb],
+			o.vsv[o.fs[i].vc],
 		}.Mul(scale)
 	}
 	return tv
 }
 
 func (o Obj) Tngen() []Triangle {
-	scale := 1.0 / VMaxLen(obj.vsv)
-	tn := make([]Triangle, obj.fs.count)
-	for i := 0; i < obj.fs.count; i++ {
-		tv[i] = Triangle{
-			obj.vsv.vertex[obj.fs.face[i].na],
-			obj.vsv.vertex[obj.fs.face[i].nb],
-			obj.vsv.vertex[obj.fs.face[i].nc],
+	scale := 1.0 / VMaxLen(o.vsv)
+	tn := make([]Triangle, len(o.fs))
+	for i := 0; i < len(o.fs); i++ {
+		tn[i] = Triangle{
+			o.vsv[o.fs[i].na],
+			o.vsv[o.fs[i].nb],
+			o.vsv[o.fs[i].nc],
 		}.Mul(scale)
 	}
 	return tn
 }
 
 func (o Obj) Ttgen() []Triangle {
-	scale := 1.0 / VMaxLen(obj.vsv)
-	tt := make([]Triangle, obj.fs.count)
-	for i := 0; i < obj.fs.count; i++ {
-		tv[i] = Triangle{
-			obj.vsv.vertex[obj.fs.face[i].ta],
-			obj.vsv.vertex[obj.fs.face[i].tb],
-			obj.vsv.vertex[obj.fs.face[i].tc],
+	scale := 1.0 / VMaxLen(o.vsv)
+	tt := make([]Triangle, len(o.fs))
+	for i := 0; i < len(o.fs); i++ {
+		tt[i] = Triangle{
+			o.vsv[o.fs[i].ta],
+			o.vsv[o.fs[i].tb],
+			o.vsv[o.fs[i].tc],
 		}.Mul(scale)
 	}
 	return tt
@@ -129,9 +129,9 @@ func (t Triangle) Viewport(field floatgeom.Point2) Triangle {
 	x := field.X() / 2.0
 	y := field.Y() / 4.0
 	return Triangle{
-		{w*t.a.x + x, h*t.a.y + y, (t.a.z + 1.0) / 1.5},
-		{w*t.b.x + x, h*t.b.y + y, (t.b.z + 1.0) / 1.5},
-		{w*t.c.x + x, h*t.c.y + y, (t.c.z + 1.0) / 1.5},
+		Vertex{w*t.a.x + x, h*t.a.y + y, (t.a.z + 1.0) / 1.5},
+		Vertex{w*t.b.x + x, h*t.b.y + y, (t.b.z + 1.0) / 1.5},
+		Vertex{w*t.c.x + x, h*t.c.y + y, (t.c.z + 1.0) / 1.5},
 	}
 }
 
@@ -141,9 +141,9 @@ func (t Triangle) Perpspective() Triangle {
 	zb := 1.0 - t.b.z/c
 	zc := 1.0 - t.c.z/c
 	return Triangle{
-		{t.a.x / za, t.a.y / za, t.a.z / za},
-		{t.b.x / zb, t.b.y / zb, t.b.z / zb},
-		{t.c.x / zc, t.c.y / zc, t.c.z / zc},
+		Vertex{t.a.x / za, t.a.y / za, t.a.z / za},
+		Vertex{t.b.x / zb, t.b.y / zb, t.b.z / zb},
+		Vertex{t.c.x / zc, t.c.y / zc, t.c.z / zc},
 	}
 }
 
@@ -159,12 +159,12 @@ func (t Triangle) BaryCenter(x, y int) Vertex {
 	d21 := v2.Dot(v1)
 	v := (d11*d20 - d01*d21) / (d00*d11 - d01*d01)
 	w := (d00*d21 - d01*d20) / (d00*d11 - d01*d01)
-	u = 1.0 - v - w
+	u := 1.0 - v - w
 	return Vertex{v, w, u}
 }
 
 // todo: use a color.RGBA type or something instead of a uint32
-func PShade(pixel uint32, shading int) uint32 {
+func PShade(pixel uint32, shading uint32) uint32 {
 	r := ((pixel >> 0x10) /****/ * shading) >> 0x08
 	g := (((pixel >> 0x08) & 0xFF) * shading) >> 0x08
 	b := (((pixel /*****/) & 0xFF) * shading) >> 0x08
@@ -176,6 +176,7 @@ func TDraw(yres int, pixel uint32, zbuff []float64, t Target) {
 	y0 := int(math.Min(t.vew.a.y, math.Min(t.vew.b.y, t.vew.c.y)))
 	x1 := int(math.Max(t.vew.a.x, math.Max(t.vew.b.x, t.vew.c.x)))
 	y1 := int(math.Max(t.vew.a.y, math.Max(t.vew.b.y, t.vew.c.y)))
+	dims := t.fdif.Bounds()
 	for x := x0; x <= x1; x++ {
 		for y := y0; y <= y1; y++ {
 			// Coordinate system is upwards.
@@ -186,9 +187,9 @@ func TDraw(yres int, pixel uint32, zbuff []float64, t Target) {
 				if z > zbuff[y+x*yres] {
 					light := Vertex{0.0, 0.0, 1.0}
 					varying := Vertex{light.Dot(t.nrm.b), light.Dot(t.nrm.c), light.Dot(t.nrm.a)}
-					pixels := t.fdif.pixels
-					xx := (t.fdif.w - 1) * (0.0 + (bc.x*t.tex.b.x + bc.y*t.tex.c.x + bc.z*t.tex.a.x))
-					yy := (t.fdif.h - 1) * (1.0 - (bc.x*t.tex.b.y + bc.y*t.tex.c.y + bc.z*t.tex.a.y))
+
+					xx := (float64(dims.Max.X) - 1) * (0.0 + (bc.x*t.tex.b.x + bc.y*t.tex.c.x + bc.z*t.tex.a.x))
+					yy := (float64(dims.Max.Y) - 1) * (1.0 - (bc.x*t.tex.b.y + bc.y*t.tex.c.y + bc.z*t.tex.a.y))
 					intensity := bc.Dot(varying)
 					shading := 0.0
 					if intensity > 0.0 {
@@ -196,7 +197,7 @@ func TDraw(yres int, pixel uint32, zbuff []float64, t Target) {
 					}
 					// Again, notice the rotated renderer (destination) but right side up image (source).
 					zbuff[y+x*yres] = z
-					pixel[y+x*yres] = PShade(pixels[xx+yy*t.fdif.w], shading)
+					t.fdif.Set(x, y, PShade(t.fdif.At(int(xx), int(yy)), shading))
 				}
 			}
 		}
@@ -205,21 +206,21 @@ func TDraw(yres int, pixel uint32, zbuff []float64, t Target) {
 
 func (t Triangle) ViewTri(x, y, z, eye Vertex) Triangle {
 	return Triangle{
-		{t.a.Dot(x) - x.Dot(eye), t.a.Dot(y) - y.Dot(eye), t.a.Dot(z) - z.Dot(eye)},
-		{t.b.Dot(x) - x.Dot(eye), t.b.Dot(y) - y.Dot(eye), t.b.Dot(z) - z.Dot(eye)},
-		{t.c.Dot(x) - x.Dot(eye), t.c.Dot(y) - y.Dot(eye), t.c.Dot(z) - z.Dot(eye)},
+		Vertex{t.a.Dot(x) - x.Dot(eye), t.a.Dot(y) - y.Dot(eye), t.a.Dot(z) - z.Dot(eye)},
+		Vertex{t.b.Dot(x) - x.Dot(eye), t.b.Dot(y) - y.Dot(eye), t.b.Dot(z) - z.Dot(eye)},
+		Vertex{t.c.Dot(x) - x.Dot(eye), t.c.Dot(y) - y.Dot(eye), t.c.Dot(z) - z.Dot(eye)},
 	}
 }
 
 func (t Triangle) ViewNrm(n Triangle, x, y, z Vertex) Triangle {
 	return Triangle{
-		{n.a.Dot(x), n.a.Dot(y), n.a.Dot(z)},
-		{n.b.Dot(x), n.b.Dot(y), n.b.Dot(z)},
-		{n.c.Dot(x), n.c.Dot(y), n.c.Dot(z)},
+		Vertex{n.a.Dot(x), n.a.Dot(y), n.a.Dot(z)},
+		Vertex{n.b.Dot(x), n.b.Dot(y), n.b.Dot(z)},
+		Vertex{n.c.Dot(x), n.c.Dot(y), n.c.Dot(z)},
 	}.Unit()
 }
 
-func oparse(f os.File) {
+func oparse(f *os.File) Obj {
 	size := 128
 	vsv := make([]Vertex, 0, size)
 	vsn := make([]Vertex, 0, size)
@@ -233,6 +234,10 @@ func oparse(f os.File) {
 			dlog.Error(err)
 		}
 	}()
+	vsncount := 0
+	vstcount := 0
+	vsvcount := 0
+	fscount := 0
 
 	for scn.Scan() {
 		var f Face
@@ -242,20 +247,20 @@ func oparse(f os.File) {
 
 		if line[0] == 'v' && line[1] == 'n' {
 			fmt.Sscanf(line, "vn %f %f %f", &v.x, &v.y, &v.z)
-			vsn.count++
-			vsn.vertex[vsn.count] = v
+			vsncount++
+			vsn[vsncount] = v
 		} else if line[0] == 'v' && line[1] == 't' {
 			fmt.Sscanf(line, "vt %f %f %f", &v.x, &v.y, &v.z)
-			vsv.count++
-			vst.vertex[vst.count] = v
+			vstcount++
+			vst[vstcount] = v
 		} else if line[0] == 'v' {
 			fmt.Sscanf(line, "v %f %f %f", &v.x, &v.y, &v.z)
-			vsv.count++
-			vsv.vertex[vsv.count] = v
+			vsvcount++
+			vsv[vsvcount] = v
 		} else if line[0] == 'f' {
 			fmt.Sscanf(line, "f %d/%d/%d %d/%d/%d %d/%d/%d", &f.va, &f.ta, &f.na, &f.vb, &f.tb, &f.nb, &f.vc, &f.tc, &f.nc)
-			fs.count++
-			fs.face[fs.count] = Face{
+			fscount++
+			fs[fscount] = Face{
 				f.va - 1, f.vb - 1, f.vc - 1,
 				f.ta - 1, f.tb - 1, f.tc - 1,
 				f.na - 1, f.nb - 1, f.nc - 1,
@@ -272,7 +277,11 @@ func main() {
 		return
 	}
 	render.Draw(r)
-	oak.Init(800, 600)
+	oak.SetupConfig.Screen = oak.Screen{
+		Width:  800,
+		Height: 600,
+	}
+	oak.Init("gel")
 }
 
 type Render struct {
