@@ -8,9 +8,19 @@ import (
 	"github.com/oakmound/oak/dlog"
 )
 
+// An Obj represents an parsing of a .obj file.
 type Obj struct {
 	vsv, vsn, vst []Vertex
 	fs            []Face
+}
+
+// A Face is an encoding of a face line within a .obj
+// Faces within a .obj are here expected to only have
+// three points, with a v, vt, and vn index for each point.
+type Face struct {
+	va, vb, vc int
+	ta, tb, tc int
+	na, nb, nc int
 }
 
 func (o Obj) Tvgen() []Triangle {
@@ -50,6 +60,7 @@ func (o Obj) Ttgen() []Triangle {
 	return tt
 }
 
+// oparse parses the input file as an Obj
 func oparse(f *os.File) Obj {
 	vsv := make([]Vertex, 0)
 	vsn := make([]Vertex, 0)

@@ -8,8 +8,37 @@ import (
 	"github.com/oakmound/oak/alg/floatgeom"
 )
 
+// A Triangle is a set of three points or vertices.
 type Triangle struct {
 	a, b, c Vertex
+}
+
+// Unit returns a Triangle where each vertex is converted into a unit vector.
+func (t Triangle) Unit() Triangle {
+	return Triangle{t.a.Unit(), t.b.Unit(), t.c.Unit()}
+}
+
+// Mul returns a Triangle with each vertex magnified by f.
+func (t Triangle) Mul(f float64) Triangle {
+	return Triangle{t.a.Mul(f), t.b.Mul(f), t.c.Mul(f)}
+}
+
+// More documentation needed in the rest of this file
+
+func (t Triangle) ViewTri(x, y, z, eye Vertex) Triangle {
+	return Triangle{
+		Vertex{t.a.Dot(x) - x.Dot(eye), t.a.Dot(y) - y.Dot(eye), t.a.Dot(z) - z.Dot(eye)},
+		Vertex{t.b.Dot(x) - x.Dot(eye), t.b.Dot(y) - y.Dot(eye), t.b.Dot(z) - z.Dot(eye)},
+		Vertex{t.c.Dot(x) - x.Dot(eye), t.c.Dot(y) - y.Dot(eye), t.c.Dot(z) - z.Dot(eye)},
+	}
+}
+
+func (t Triangle) ViewNrm(x, y, z Vertex) Triangle {
+	return Triangle{
+		Vertex{t.a.Dot(x), t.a.Dot(y), t.a.Dot(z)},
+		Vertex{t.b.Dot(x), t.b.Dot(y), t.b.Dot(z)},
+		Vertex{t.c.Dot(x), t.c.Dot(y), t.c.Dot(z)},
+	}.Unit()
 }
 
 func (t Triangle) Viewport(field floatgeom.Point2) Triangle {
@@ -52,49 +81,25 @@ func (t Triangle) BaryCenter(x, y int) Vertex {
 	return Vertex{v, w, u}
 }
 
-func (t Triangle) Unit() Triangle {
-	return Triangle{t.a.Unit(), t.b.Unit(), t.c.Unit()}
-}
-
-func (t Triangle) Mul(f float64) Triangle {
-	return Triangle{t.a.Mul(f), t.b.Mul(f), t.c.Mul(f)}
-}
-
-func (t Triangle) ViewTri(x, y, z, eye Vertex) Triangle {
-	return Triangle{
-		Vertex{t.a.Dot(x) - x.Dot(eye), t.a.Dot(y) - y.Dot(eye), t.a.Dot(z) - z.Dot(eye)},
-		Vertex{t.b.Dot(x) - x.Dot(eye), t.b.Dot(y) - y.Dot(eye), t.b.Dot(z) - z.Dot(eye)},
-		Vertex{t.c.Dot(x) - x.Dot(eye), t.c.Dot(y) - y.Dot(eye), t.c.Dot(z) - z.Dot(eye)},
-	}
-}
-
-func (t Triangle) ViewNrm(x, y, z Vertex) Triangle {
-	return Triangle{
-		Vertex{t.a.Dot(x), t.a.Dot(y), t.a.Dot(z)},
-		Vertex{t.b.Dot(x), t.b.Dot(y), t.b.Dot(z)},
-		Vertex{t.c.Dot(x), t.c.Dot(y), t.c.Dot(z)},
-	}.Unit()
-}
-
-func TDraw(buff *image.RGBA, zbuff [][]float64, t Target) {
-	x0 := int(math.Min(t.vew.a.x, math.Min(t.vew.b.x, t.vew.c.x)))
-	y0 := int(math.Min(t.vew.a.y, math.Min(t.vew.b.y, t.vew.c.y)))
-	x1 := int(math.Max(t.vew.a.x, math.Max(t.vew.b.x, t.vew.c.x)))
-	y1 := int(math.Max(t.vew.a.y, math.Max(t.vew.b.y, t.vew.c.y)))
-	dims := t.fdif.Bounds()
+func TDraw(buff *image.RGBA, zbuff [][]float64, vew, nrm, tex Triangle, textureData *image.RGBA) {
+	x0 := int(math.Min(vew.a.x, math.Min(vew.b.x, vew.c.x)))
+	y0 := int(math.Min(vew.a.y, math.Min(vew.b.y, vew.c.y)))
+	x1 := int(math.Max(vew.a.x, math.Max(vew.b.x, vew.c.x)))
+	y1 := int(math.Max(vew.a.y, math.Max(vew.b.y, vew.c.y)))
+	dims := textureData.Bounds()
 	for x := x0; x <= x1; x++ {
 		for y := y0; y <= y1; y++ {
 			// Coordinate system is upwards.
-			bc := t.vew.BaryCenter(x, y)
+			bc := vew.BaryCenter(x, y)
 			if bc.x >= 0.0 && bc.y >= 0.0 && bc.z >= 0.0 {
 				// But everything else here is rotated 90 degrees to accomodate a fast render cache.
-				z := bc.x*t.vew.b.z + bc.y*t.vew.c.z + bc.z*t.vew.a.z
+				z := bc.x*vew.b.z + bc.y*vew.c.z + bc.z*vew.a.z
 				if z > zbuff[x][y] {
 					light := Vertex{0.0, 0.0, 1.0}
-					varying := Vertex{light.Dot(t.nrm.b), light.Dot(t.nrm.c), light.Dot(t.nrm.a)}
+					varying := Vertex{light.Dot(nrm.b), light.Dot(nrm.c), light.Dot(nrm.a)}
 
-					xx := (float64(dims.Max.X) - 1) * (0.0 + (bc.x*t.tex.b.x + bc.y*t.tex.c.x + bc.z*t.tex.a.x))
-					yy := (float64(dims.Max.Y) - 1) * (1.0 - (bc.x*t.tex.b.y + bc.y*t.tex.c.y + bc.z*t.tex.a.y))
+					xx := (float64(dims.Max.X) - 1) * (0.0 + (bc.x*tex.b.x + bc.y*tex.c.x + bc.z*tex.a.x))
+					yy := (float64(dims.Max.Y) - 1) * (1.0 - (bc.x*tex.b.y + bc.y*tex.c.y + bc.z*tex.a.y))
 					intensity := bc.Dot(varying)
 					var shading uint32
 					if intensity > 0.0 {
@@ -102,23 +107,27 @@ func TDraw(buff *image.RGBA, zbuff [][]float64, t Target) {
 					}
 					// Again, notice the rotated renderer (destination) but right side up image (source).
 					zbuff[x][y] = z
-					buff.Set(x, y, PShade(t.fdif.At(int(xx), int(yy)), shading))
+					buff.Set(x, y, PShade(textureData.At(int(xx), int(yy)), shading))
 				}
 			}
 		}
 	}
 }
 
+// PShade takes a color and applies shading to it by magnifying it's rgb values
 func PShade(pixel color.Color, shading uint32) color.RGBA {
 	r, g, b, a := pixel.RGBA()
-	r /= 257
-	r *= shading
-	r >>= 0x08
-	g /= 257
-	g *= shading
-	g >>= 0x08
-	b /= 257
-	b *= shading
-	b >>= 0x08
+	// r,g, and b are divided by 257 because the .RGBA() function returns
+	// values on a 16 bit scale instead of an 8 bit scale.
+	// They are then magnified by shading, not overflowing because they are
+	// int32 values, and shifted to the right to represent division after
+	// shading.
+	// Todo: shading should probably by a float64 instead of multiplying and
+	// then shifting
+	r = ((r / 257) * shading) >> 0x08
+	g = ((g / 257) * shading) >> 0x08
+	b = ((b / 257) * shading) >> 0x08
+	// r,g, and b need to be cast back to uint8s to create a color.RGBA value
+	// from them.
 	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}
 }
