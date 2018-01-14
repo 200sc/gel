@@ -56,10 +56,13 @@ func (r *Render) DrawOffset(buff draw.Image, xOff, yOff float64) {
 		zbuff := make([][]float64, r.w)
 		for i := range zbuff {
 			zbuff[i] = make([]float64, r.h)
+			for j := range zbuff[i] {
+				zbuff[i][j] = -math.MaxFloat64
+			}
 		}
 		ctr := Vertex{0.0, 0.0, 0.0}
 		ups := Vertex{0.0, 1.0, 0.0}
-		eye := Vertex{math.Sin(mouseXt), math.Sin(mouseYt), math.Sin(mouseXt)}
+		eye := Vertex{math.Sin(mouseXt), math.Sin(mouseYt), math.Cos(mouseXt)}
 		z := eye.Sub(ctr).Unit()
 		x := ups.Cross(z).Unit()
 		y := z.Cross(x)
