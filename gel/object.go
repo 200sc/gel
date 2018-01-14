@@ -16,38 +16,36 @@ type Obj struct {
 func (o Obj) Tvgen() []Triangle {
 	scale := 1.0 / VMaxLen(o.vsv)
 	tv := make([]Triangle, len(o.fs))
-	for i := 0; i < len(o.fs); i++ {
+	for i, f := range o.fs {
 		tv[i] = Triangle{
-			o.vsv[o.fs[i].va],
-			o.vsv[o.fs[i].vb],
-			o.vsv[o.fs[i].vc],
+			o.vsv[f.va],
+			o.vsv[f.vb],
+			o.vsv[f.vc],
 		}.Mul(scale)
 	}
 	return tv
 }
 
 func (o Obj) Tngen() []Triangle {
-	scale := 1.0 / VMaxLen(o.vsv)
 	tn := make([]Triangle, len(o.fs))
-	for i := 0; i < len(o.fs); i++ {
+	for i, f := range o.fs {
 		tn[i] = Triangle{
-			o.vsn[o.fs[i].na],
-			o.vsn[o.fs[i].nb],
-			o.vsn[o.fs[i].nc],
-		}.Mul(scale)
+			o.vsn[f.na],
+			o.vsn[f.nb],
+			o.vsn[f.nc],
+		}
 	}
 	return tn
 }
 
 func (o Obj) Ttgen() []Triangle {
-	scale := 1.0 / VMaxLen(o.vsv)
 	tt := make([]Triangle, len(o.fs))
-	for i := 0; i < len(o.fs); i++ {
+	for i, f := range o.fs {
 		tt[i] = Triangle{
-			o.vst[o.fs[i].ta],
-			o.vst[o.fs[i].tb],
-			o.vst[o.fs[i].tc],
-		}.Mul(scale)
+			o.vst[f.ta],
+			o.vst[f.tb],
+			o.vst[f.tc],
+		}
 	}
 	return tt
 }
