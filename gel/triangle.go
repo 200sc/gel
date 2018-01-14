@@ -1,6 +1,7 @@
 package gel
 
 import (
+	"image"
 	"image/color"
 	"math"
 
@@ -75,7 +76,7 @@ func (t Triangle) ViewNrm(x, y, z Vertex) Triangle {
 	}.Unit()
 }
 
-func TDraw(zbuff [][]float64, t Target) {
+func TDraw(buff *image.RGBA, zbuff [][]float64, t Target) {
 	x0 := int(math.Min(t.vew.a.x, math.Min(t.vew.b.x, t.vew.c.x)))
 	y0 := int(math.Min(t.vew.a.y, math.Min(t.vew.b.y, t.vew.c.y)))
 	x1 := int(math.Max(t.vew.a.x, math.Max(t.vew.b.x, t.vew.c.x)))
@@ -101,7 +102,7 @@ func TDraw(zbuff [][]float64, t Target) {
 					}
 					// Again, notice the rotated renderer (destination) but right side up image (source).
 					zbuff[x][y] = z
-					t.fdif.Set(x, y, PShade(t.fdif.At(int(xx), int(yy)), shading))
+					buff.Set(x, y, PShade(t.fdif.At(int(xx), int(yy)), shading))
 				}
 			}
 		}
@@ -110,10 +111,13 @@ func TDraw(zbuff [][]float64, t Target) {
 
 func PShade(pixel color.Color, shading uint32) color.RGBA {
 	r, g, b, a := pixel.RGBA()
+	r /= 257
 	r *= shading
 	r >>= 0x08
+	g /= 257
 	g *= shading
 	g >>= 0x08
+	b /= 257
 	b *= shading
 	b >>= 0x08
 	return color.RGBA{uint8(r), uint8(g), uint8(b), uint8(a)}

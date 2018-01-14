@@ -33,7 +33,7 @@ func NewRender(objfile, bmpfile string) (*Render, error) {
 	}
 	obj := oparse(fobj)
 	return &Render{
-		Sprite: sp,
+		Sprite: render.NewEmptySprite(0, 0, 800, 600),
 		tv:     obj.Tvgen(),
 		tt:     obj.Ttgen(),
 		tn:     obj.Tngen(),
@@ -49,6 +49,8 @@ func (r *Render) Draw(buff draw.Image) {
 
 func (r *Render) DrawOffset(buff draw.Image, xOff, yOff float64) {
 	if mouse.LastEvent != r.lastmouse {
+		r.Sprite.SetRGBA(image.NewRGBA(r.Sprite.GetRGBA().Bounds()))
+
 		mouseXt := mouse.LastEvent.X() * .005
 		mouseYt := mouse.LastEvent.Y() * .005
 		zbuff := make([][]float64, r.w)
@@ -68,7 +70,7 @@ func (r *Render) DrawOffset(buff draw.Image, xOff, yOff float64) {
 			per := tri.Perspective()
 			vew := per.Viewport(floatgeom.Point2{float64(r.w), float64(r.h)})
 			targ := Target{vew, nrm, tex, r.fdif}
-			TDraw(zbuff, targ)
+			TDraw(r.Sprite.GetRGBA(), zbuff, targ)
 		}
 	}
 	r.lastmouse = mouse.LastEvent
