@@ -75,7 +75,7 @@ func (t Triangle) ViewNrm(x, y, z Vertex) Triangle {
 	}.Unit()
 }
 
-func TDraw(yres int, zbuff []float64, t Target) {
+func TDraw(zbuff [][]float64, t Target) {
 	x0 := int(math.Min(t.vew.a.x, math.Min(t.vew.b.x, t.vew.c.x)))
 	y0 := int(math.Min(t.vew.a.y, math.Min(t.vew.b.y, t.vew.c.y)))
 	x1 := int(math.Max(t.vew.a.x, math.Max(t.vew.b.x, t.vew.c.x)))
@@ -88,7 +88,7 @@ func TDraw(yres int, zbuff []float64, t Target) {
 			if bc.x >= 0.0 && bc.y >= 0.0 && bc.z >= 0.0 {
 				// But everything else here is rotated 90 degrees to accomodate a fast render cache.
 				z := bc.x*t.vew.b.z + bc.y*t.vew.c.z + bc.z*t.vew.a.z
-				if z > zbuff[y+x*yres] {
+				if z > zbuff[x][y] {
 					light := Vertex{0.0, 0.0, 1.0}
 					varying := Vertex{light.Dot(t.nrm.b), light.Dot(t.nrm.c), light.Dot(t.nrm.a)}
 
@@ -100,7 +100,7 @@ func TDraw(yres int, zbuff []float64, t Target) {
 						shading = uint32(intensity * 0xFF)
 					}
 					// Again, notice the rotated renderer (destination) but right side up image (source).
-					zbuff[y+x*yres] = z
+					zbuff[x][y] = z
 					t.fdif.Set(x, y, PShade(t.fdif.At(int(xx), int(yy)), shading))
 				}
 			}

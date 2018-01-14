@@ -37,6 +37,9 @@ func NewRender(objfile, bmpfile string) (*Render, error) {
 		tv:     obj.Tvgen(),
 		tt:     obj.Ttgen(),
 		tn:     obj.Tngen(),
+		fdif:   sp.GetRGBA(),
+		w:      800,
+		h:      600,
 	}, nil
 }
 
@@ -48,7 +51,10 @@ func (r *Render) DrawOffset(buff draw.Image, xOff, yOff float64) {
 	if mouse.LastEvent != r.lastmouse {
 		mouseXt := mouse.LastEvent.X() * .005
 		mouseYt := mouse.LastEvent.Y() * .005
-		zbuff := make([]float64, r.w*r.h)
+		zbuff := make([][]float64, r.w)
+		for i := range zbuff {
+			zbuff[i] = make([]float64, r.h)
+		}
 		ctr := Vertex{0.0, 0.0, 0.0}
 		ups := Vertex{0.0, 1.0, 0.0}
 		eye := Vertex{math.Sin(mouseXt), math.Sin(mouseYt), math.Sin(mouseXt)}
@@ -62,9 +68,9 @@ func (r *Render) DrawOffset(buff draw.Image, xOff, yOff float64) {
 			per := tri.Perspective()
 			vew := per.Viewport(floatgeom.Point2{float64(r.w), float64(r.h)})
 			targ := Target{vew, nrm, tex, r.fdif}
-			TDraw(r.h, zbuff, targ)
+			TDraw(zbuff, targ)
 		}
-		r.Sprite.DrawOffset(buff, xOff, yOff)
 	}
 	r.lastmouse = mouse.LastEvent
+	r.Sprite.DrawOffset(buff, xOff, yOff)
 }
