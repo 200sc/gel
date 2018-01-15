@@ -20,8 +20,8 @@ func main() {
 		ImagePath: "model",
 	}
 	// Add our only scene, named "gel", to oak
-	// gel.Scene is the next place our application's code will execute.
-	oak.AddScene("gel", gel.Scene)
+	// gel/scene.go is the next place our application's code will execute.
+	oak.AddScene("gel", gel.SceneStart, gel.SceneLoop, gel.SceneEnd)
 	// Start oak at the scene "gel"
 	oak.Init("gel")
 }

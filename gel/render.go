@@ -1,6 +1,7 @@
 package gel
 
 import (
+	"errors"
 	"image"
 	"image/draw"
 	"math"
@@ -43,9 +44,9 @@ func NewRender(objfile, texfile string, w, h int) (*Render, error) {
 	if err != nil {
 		return nil, err
 	}
-	tex, err := render.LoadSprite(texfile)
-	if err != nil {
-		return nil, err
+	tex := render.LoadSprite(texfile)
+	if tex == nil {
+		return nil, errors.New("Unable to load texture file")
 	}
 	// parse the object file into an Object struct
 	obj := oparse(fobj)
@@ -76,7 +77,7 @@ func (r *Render) Draw(buff draw.Image) {
 func (r *Render) DrawOffset(buff draw.Image, xOff, yOff float64) {
 	// If there hasn't been new mouse input, so the 3d model has not been rotated
 	// since it was processed last, don't re-process the model's rotation.
-	if mouse.LastEvent != r.lastmouse {
+	if mouse.LastMouseEvent != r.lastmouse {
 		// Reset the backing Sprite's color buffer to be empty, so we avoid
 		// smearing with the last drawn frame.
 		bounds := r.Sprite.GetRGBA().Bounds()
@@ -86,8 +87,8 @@ func (r *Render) DrawOffset(buff draw.Image, xOff, yOff float64) {
 
 		// Get the mouse position and scale it down so we can use it for the
 		// render's rotation.
-		mouseXt := mouse.LastEvent.X() * .005
-		mouseYt := mouse.LastEvent.Y() * .005
+		mouseXt := float64(mouse.LastMouseEvent.X * .005)
+		mouseYt := float64(mouse.LastMouseEvent.Y * .005)
 		// Set up a zbuffer so we know what pixels we should draw and which ones
 		// are behind others we have already drawn. Initialize all values in the
 		// buffer to be as far back as possible (-math.MaxFloat64)
@@ -123,7 +124,7 @@ func (r *Render) DrawOffset(buff draw.Image, xOff, yOff float64) {
 			TDraw(r.Sprite.GetRGBA(), zbuff, vew, nrm, tex, r.textureData)
 		}
 	}
-	r.lastmouse = mouse.LastEvent
+	r.lastmouse = mouse.LastMouseEvent
 	// Instead of handling the drawing ourselves, let the embedded Sprite which
 	// we've populated the color buffer of draw itself.
 	r.Sprite.DrawOffset(buff, xOff, yOff)

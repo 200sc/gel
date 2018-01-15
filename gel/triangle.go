@@ -87,6 +87,7 @@ func TDraw(buff *image.RGBA, zbuff [][]float64, vew, nrm, tex Triangle, textureD
 	x1 := int(math.Max(vew.a.x, math.Max(vew.b.x, vew.c.x)))
 	y1 := int(math.Max(vew.a.y, math.Max(vew.b.y, vew.c.y)))
 	dims := textureData.Bounds()
+	buffH := buff.Bounds().Max.Y
 	for x := x0; x <= x1; x++ {
 		for y := y0; y <= y1; y++ {
 			// Coordinate system is upwards.
@@ -107,7 +108,10 @@ func TDraw(buff *image.RGBA, zbuff [][]float64, vew, nrm, tex Triangle, textureD
 					}
 					// Again, notice the rotated renderer (destination) but right side up image (source).
 					zbuff[x][y] = z
-					buff.Set(x, y, PShade(textureData.At(int(xx), int(yy)), shading))
+					// Change from the original gel: we subtract y from buffH because,
+					// somewhere, I (200sc) messed up the translation and we accidentally
+					// are rendering everything upsidedown. This is the easiest fix!
+					buff.Set(x, buffH-y, PShade(textureData.At(int(xx), int(yy)), shading))
 				}
 			}
 		}
