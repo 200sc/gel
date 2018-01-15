@@ -87,12 +87,11 @@ func TDraw(buff *image.RGBA, zbuff [][]float64, vew, nrm, tex Triangle, textureD
 	x1 := int(math.Max(vew.a.x, math.Max(vew.b.x, vew.c.x)))
 	y1 := int(math.Max(vew.a.y, math.Max(vew.b.y, vew.c.y)))
 	dims := textureData.Bounds()
+	buffH := buff.Bounds().Max.Y
 	for x := x0; x <= x1; x++ {
 		for y := y0; y <= y1; y++ {
-			// Coordinate system is upwards.
 			bc := vew.BaryCenter(x, y)
 			if bc.x >= 0.0 && bc.y >= 0.0 && bc.z >= 0.0 {
-				// But everything else here is rotated 90 degrees to accomodate a fast render cache.
 				z := bc.x*vew.b.z + bc.y*vew.c.z + bc.z*vew.a.z
 				if z > zbuff[x][y] {
 					light := Vertex{0.0, 0.0, 1.0}
@@ -105,9 +104,11 @@ func TDraw(buff *image.RGBA, zbuff [][]float64, vew, nrm, tex Triangle, textureD
 					if intensity > 0.0 {
 						shading = uint32(intensity * 0xFF)
 					}
-					// Again, notice the rotated renderer (destination) but right side up image (source).
 					zbuff[x][y] = z
-					buff.Set(x, y, PShade(textureData.At(int(xx), int(yy)), shading))
+					// Change from the original gel: we subtract y from buffH because,
+					// somewhere, I (200sc) messed up the translation and we accidentally
+					// are rendering everything upsidedown. This is the easiest fix!
+					buff.Set(x, buffH-y, PShade(textureData.At(int(xx), int(yy)), shading))
 				}
 			}
 		}
