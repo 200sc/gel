@@ -1,6 +1,6 @@
 # gel
 
-Gel (Graphical Emulation Layer) is an N64-like software renderer written in ~~512~~ 507 lines,
+Gel (Graphical Emulation Layer) is an N64-like software renderer written in ~~512~~ 517 lines,
 with documentation.
 
     make; ./gel

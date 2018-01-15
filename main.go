@@ -12,13 +12,6 @@ func main() {
 		Width:  800,
 		Height: 600,
 	}
-	// Image assets (for textures) will be loaded from ./model
-	// Setting AssetPath to \\ is equivalent to ignoring AssetPath, which
-	// would go between "."" and "model".
-	oak.SetupConfig.Assets = oak.Assets{
-		AssetPath: "\\",
-		ImagePath: "model",
-	}
 	// Add our only scene, named "gel", to oak
 	// gel/scene.go is the next place our application's code will execute.
 	oak.AddScene("gel", gel.SceneStart, gel.SceneLoop, gel.SceneEnd)
