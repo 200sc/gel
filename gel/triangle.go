@@ -23,7 +23,8 @@ func (t Triangle) Mul(f float64) Triangle {
 	return Triangle{t.a.Mul(f), t.b.Mul(f), t.c.Mul(f)}
 }
 
-// More documentation needed in the rest of this file
+// More documentation needed in the rest of this file,
+// where the significant math occurs
 
 func (t Triangle) ViewTri(x, y, z, eye Vertex) Triangle {
 	return Triangle{
