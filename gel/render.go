@@ -43,7 +43,7 @@ func NewRender(objfile, texfile string, w, h int) (*Render, error) {
 	if err != nil {
 		return nil, err
 	}
-	tex, err := render.LoadSprite(texfile)
+	tex, err := render.LoadSprite("model", texfile)
 	if err != nil {
 		return nil, err
 	}
